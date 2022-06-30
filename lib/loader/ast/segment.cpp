@@ -245,6 +245,11 @@ Expect<void> Loader::loadSegment(AST::CodeSegment &CodeSeg) {
     } else {
       LocalCnt = *Res;
     }
+    // TODO: temporary fix to prevent fuzzing for the same bug again
+    if (LocalCnt > 1000) {
+      return logLoadError(ErrCode::TooManyLocals, FMgr.getLastOffset(),
+                          ASTNodeAttr::Seg_Code);
+    }
     // Total local variables should not more than 2^32.
     if (UINT32_MAX - TotalLocalCnt < LocalCnt) {
       return logLoadError(ErrCode::TooManyLocals, FMgr.getLastOffset(),
