@@ -148,6 +148,10 @@ Expect<void> Loader::loadSegment(AST::ElementSegment &ElemSeg) {
       return logLoadError(Res.error(), FMgr.getLastOffset(),
                           ASTNodeAttr::Seg_Element);
     }
+    if (unlikely(FMgr.getRemainSize() < VecCnt)) {
+      return logLoadError(ErrCode::LengthOutOfBounds, FMgr.getOffset(),
+                          ASTNodeAttr::Seg_Element);
+    }
     for (uint32_t I = 0; I < VecCnt; ++I) {
       // For each element in vec(funcidx), make expr(ref.func idx end).
       ElemSeg.getInitExprs().emplace_back();
@@ -194,6 +198,10 @@ Expect<void> Loader::loadSegment(AST::ElementSegment &ElemSeg) {
     } else {
       VecCnt = *Res;
     }
+    if (unlikely(FMgr.getRemainSize() < VecCnt)) {
+      return logLoadError(ErrCode::LengthOutOfBounds, FMgr.getOffset(),
+                          ASTNodeAttr::Seg_Element);
+    }
     ElemSeg.getInitExprs().clear();
     ElemSeg.getInitExprs().reserve(VecCnt);
     for (uint32_t I = 0; I < VecCnt; ++I) {
@@ -233,6 +241,10 @@ Expect<void> Loader::loadSegment(AST::CodeSegment &CodeSeg) {
     CodeSeg.getLocals().reserve(VecCnt);
   } else {
     return logLoadError(Res.error(), FMgr.getLastOffset(),
+                        ASTNodeAttr::Seg_Code);
+  }
+  if (unlikely(FMgr.getRemainSize() < VecCnt)) {
+    return logLoadError(ErrCode::LengthOutOfBounds, FMgr.getOffset(),
                         ASTNodeAttr::Seg_Code);
   }
   uint32_t TotalLocalCnt = 0;
@@ -348,6 +360,10 @@ Expect<void> Loader::loadSegment(AST::DataSegment &DataSeg) {
       VecCnt = *Res;
     } else {
       return logLoadError(Res.error(), FMgr.getLastOffset(),
+                          ASTNodeAttr::Seg_Data);
+    }
+    if (unlikely(FMgr.getRemainSize() < VecCnt)) {
+      return logLoadError(ErrCode::LengthOutOfBounds, FMgr.getOffset(),
                           ASTNodeAttr::Seg_Data);
     }
     if (auto Res = FMgr.readBytes(VecCnt)) {
