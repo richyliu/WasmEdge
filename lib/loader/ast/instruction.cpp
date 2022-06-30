@@ -223,6 +223,11 @@ Expect<void> Loader::loadInstruction(AST::Instruction &Instr) {
       return logLoadError(ErrCode::IntegerTooLong, FMgr.getLastOffset(),
                           ASTNodeAttr::Instruction);
     }
+    if (unlikely(FMgr.getRemainSize() < VecCnt)) {
+      // More labels than the file can possibly have
+      return logLoadError(ErrCode::LengthOutOfBounds, FMgr.getLastOffset(),
+                          ASTNodeAttr::Instruction);
+    }
     Instr.setLabelListSize(VecCnt + 1);
     for (uint32_t I = 0; I < VecCnt; ++I) {
       if (auto Res = readU32(Instr.getLabelList()[I].TargetIndex);
