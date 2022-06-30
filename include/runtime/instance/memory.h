@@ -98,21 +98,25 @@ public:
     if (MemType.getLimit().hasMax()) {
       MaxPageCaped = std::min(Max, MaxPageCaped);
     }
-    if (Count + Min > MaxPageCaped) {
+    uint32_t NewMin = 0;
+    if (__builtin_add_overflow(Count, Min, &NewMin)) {
       return false;
     }
-    if (Count + Min > PageLimit) {
+    if (NewMin > MaxPageCaped) {
+      return false;
+    }
+    if (NewMin > PageLimit) {
       spdlog::error("Memory grow page failed -- exceeded limit page size: {}",
                     PageLimit);
       return false;
     }
-    if (auto NewPtr = Allocator::resize(DataPtr, Min, Min + Count);
+    if (auto NewPtr = Allocator::resize(DataPtr, Min, NewMin);
         NewPtr == nullptr) {
       return false;
     } else {
       DataPtr = NewPtr;
     }
-    MemType.getLimit().setMin(Min + Count);
+    MemType.getLimit().setMin(NewMin);
     return true;
   }
 
