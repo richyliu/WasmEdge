@@ -293,6 +293,11 @@ Expect<void> Loader::loadInstruction(AST::Instruction &Instr) {
     if (auto Res = readU32(VecCnt); unlikely(!Res)) {
       return Unexpect(Res);
     }
+    if (unlikely(FMgr.getRemainSize() < VecCnt)) {
+      // More value types than the file can possibly have
+      return logLoadError(ErrCode::LengthOutOfBounds, FMgr.getLastOffset(),
+                          ASTNodeAttr::Instruction);
+    }
     Instr.setValTypeListSize(VecCnt);
     for (uint32_t I = 0; I < VecCnt; ++I) {
       ValType VType;
