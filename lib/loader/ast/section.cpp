@@ -266,6 +266,10 @@ Expect<void> Loader::loadSection(FileMgr &VecMgr, AST::AOTSection &Sec) {
     spdlog::error("    AOT types size read error:{}", Res.error());
     return Unexpect(Res);
   } else {
+    if (unlikely(VecMgr.getRemainSize() < *Res)) {
+      spdlog::error("    AOT types size exceeds file size: ", *Res);
+      return Unexpect(Res);
+    }
     Sec.getTypesAddress().resize(*Res);
   }
   for (size_t I = 0; I < Sec.getTypesAddress().size(); ++I) {
@@ -282,6 +286,10 @@ Expect<void> Loader::loadSection(FileMgr &VecMgr, AST::AOTSection &Sec) {
     spdlog::error("    AOT code size read error:{}", Res.error());
     return Unexpect(Res);
   } else {
+    if (unlikely(VecMgr.getRemainSize() < *Res)) {
+      spdlog::error("    AOT code size exceeds file size: ", *Res);
+      return Unexpect(Res);
+    }
     Sec.getCodesAddress().resize(*Res);
   }
   for (size_t I = 0; I < Sec.getCodesAddress().size(); ++I) {
@@ -299,6 +307,10 @@ Expect<void> Loader::loadSection(FileMgr &VecMgr, AST::AOTSection &Sec) {
     spdlog::error("    AOT section count read error:{}", Res.error());
     return Unexpect(Res);
   } else {
+    if (unlikely(VecMgr.getRemainSize() < *Res)) {
+      spdlog::error("    AOT section count exceeds file size: ", *Res);
+      return Unexpect(Res);
+    }
     Sec.getSections().resize(*Res);
   }
 
