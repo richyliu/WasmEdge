@@ -10,7 +10,9 @@ Expect<void>
 Executor::runMemorySizeOp(Runtime::StackManager &StackMgr,
                           Runtime::Instance::MemoryInstance &MemInst) {
   // Push SZ = page size to stack.
-  StackMgr.push(MemInst.getPageSize());
+  if (auto Res = StackMgr.push(MemInst.getPageSize()); unlikely(!Res)) {
+    return Unexpect(Res);
+  }
   return {};
 }
 

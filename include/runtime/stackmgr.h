@@ -64,8 +64,15 @@ public:
   }
 
   /// Push a new value entry to stack.
-  template <typename T> void push(T &&Val) {
+  template <typename T> Expect<void> push(T &&Val) {
+    if(ValueStack.size() > 100000) {
+      auto Code = ErrCode::StackOverflow;
+      spdlog::error(Code);
+      spdlog::error("    value stack overflow");
+      return Unexpect(Code);
+    }
     ValueStack.push_back(std::forward<T>(Val));
+    return {};
   }
 
   /// Unsafe Pop and return the top entry.
@@ -79,6 +86,7 @@ public:
   void pushFrame(const Instance::ModuleInstance *Module,
                  AST::InstrView::iterator From, uint32_t LocalNum = 0,
                  uint32_t Arity = 0, bool IsTailCall = false) noexcept {
+    // TODO: add check for frame stack overflow
     if (likely(!IsTailCall)) {
       FrameStack.emplace_back(Module, From, LocalNum, Arity, ValueStack.size());
     } else {

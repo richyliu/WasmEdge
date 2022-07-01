@@ -92,7 +92,9 @@ Expect<void> Executor::call(Runtime::StackManager &StackMgr,
       static_cast<uint32_t>(FuncType.getReturnTypes().size());
 
   for (uint32_t I = 0; I < ParamsSize; ++I) {
-    StackMgr.push(Args[I]);
+    if (auto Res = StackMgr.push(Args[I]); unlikely(!Res)) {
+      return Unexpect(Res);
+    }
   }
 
   auto Instrs = FuncInst->getInstrs();
@@ -182,7 +184,9 @@ Executor::callIndirect(Runtime::StackManager &StackMgr, const uint32_t TableIdx,
       static_cast<uint32_t>(FuncType.getReturnTypes().size());
 
   for (uint32_t I = 0; I < ParamsSize; ++I) {
-    StackMgr.push(Args[I]);
+    if (auto Res = StackMgr.push(Args[I]); unlikely(!Res)) {
+      return Unexpect(Res);
+    }
   }
 
   auto Instrs = FuncInst->getInstrs();

@@ -88,7 +88,9 @@ Executor::enterFunction(Runtime::StackManager &StackMgr,
 
     // Push returns back to stack.
     for (auto &R : Rets) {
-      StackMgr.push(std::move(R));
+      if (auto Res = StackMgr.push(std::move(R)); unlikely(!Res)) {
+        return Unexpect(Res);
+      }
     }
 
     // For host function case, the continuation will be the continuation from
@@ -145,7 +147,9 @@ Executor::enterFunction(Runtime::StackManager &StackMgr,
 
     // Push returns back to stack.
     for (uint32_t I = 0; I < Rets.size(); ++I) {
-      StackMgr.push(Rets[I]);
+      if (auto Res = StackMgr.push(Rets[I]); unlikely(!Res)) {
+        return Unexpect(Res);
+      }
     }
 
     // For compiled function case, the continuation will be the continuation
@@ -157,7 +161,9 @@ Executor::enterFunction(Runtime::StackManager &StackMgr,
     // Push local variables into the stack.
     for (auto &Def : Func.getLocals()) {
       for (uint32_t I = 0; I < Def.first; I++) {
-        StackMgr.push(ValueFromType(Def.second));
+        if (auto Res = StackMgr.push(ValueFromType(Def.second)); unlikely(!Res)) {
+          return Unexpect(Res);
+        }
       }
     }
 

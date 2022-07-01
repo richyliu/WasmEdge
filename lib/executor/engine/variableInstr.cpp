@@ -10,7 +10,9 @@ namespace Executor {
 
 Expect<void> Executor::runLocalGetOp(Runtime::StackManager &StackMgr,
                                      uint32_t StackOffset) const noexcept {
-  StackMgr.push(StackMgr.getTopN(StackOffset));
+  if (auto Res = StackMgr.push(StackMgr.getTopN(StackOffset)); unlikely(!Res)) {
+    return Unexpect(Res);
+  }
   return {};
 }
 
@@ -31,7 +33,9 @@ Expect<void> Executor::runGlobalGetOp(Runtime::StackManager &StackMgr,
                                       uint32_t Idx) const noexcept {
   auto *GlobInst = getGlobInstByIdx(StackMgr, Idx);
   assuming(GlobInst);
-  StackMgr.push(GlobInst->getValue());
+  if (auto Res = StackMgr.push(GlobInst->getValue()); unlikely(!Res)) {
+    return Unexpect(Res);
+  }
   return {};
 }
 

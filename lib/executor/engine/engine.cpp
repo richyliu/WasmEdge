@@ -29,7 +29,9 @@ Executor::runFunction(Runtime::StackManager &StackMgr,
 
   // Push arguments.
   for (auto &Val : Params) {
-    StackMgr.push(Val);
+    if (auto Res = StackMgr.push(Val); unlikely(!Res)) {
+      return Unexpect(Res);
+    }
   }
 
   // Enter and execute function.
@@ -157,10 +159,14 @@ Expect<void> Executor::execute(Runtime::StackManager &StackMgr,
       ValVariant Val1 = StackMgr.pop();
 
       // Select the value.
+      Expect<void> Res;
       if (CondVal.get<uint32_t>() == 0) {
-        StackMgr.push(Val2);
+        Res = StackMgr.push(Val2);
       } else {
-        StackMgr.push(Val1);
+        Res = StackMgr.push(Val1);
+      }
+      if (unlikely(!Res)) {
+        return Unexpect(Res);
       }
       return {};
     }
@@ -299,7 +305,9 @@ Expect<void> Executor::execute(Runtime::StackManager &StackMgr,
     case OpCode::I64__const:
     case OpCode::F32__const:
     case OpCode::F64__const:
-      StackMgr.push(Instr.getNum());
+      if (auto Res = StackMgr.push(Instr.getNum()); unlikely(!Res)) {
+        return Unexpect(Res);
+      }
       return {};
 
     // Unary numeric instructions
@@ -800,7 +808,9 @@ Expect<void> Executor::execute(Runtime::StackManager &StackMgr,
 
     // SIMD Const Instructions
     case OpCode::V128__const:
-      StackMgr.push(Instr.getNum());
+      if (auto Res = StackMgr.push(Instr.getNum()); unlikely(!Res)) {
+        return Unexpect(Res);
+      }
       return {};
 
     // SIMD Shuffle Instructions

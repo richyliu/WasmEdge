@@ -822,6 +822,8 @@ E(RefTypeMismatch, 0x8E, "reference type mismatch")
 E(UnalignedAtomicAccess, 0x8F, "unaligned atomic")
 // wait32/wait64 on unshared memory
 E(WaitOnUnsharedMemory, 0x90, "wait on unshared memory")
+// value/frame stack exhaustion
+E(StackOverflow, 0x91, "stack overflow")
 // @}
 
 #undef E

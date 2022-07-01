@@ -14,7 +14,9 @@ Expect<void> Executor::runTableGetOp(Runtime::StackManager &StackMgr,
 
   // Get table[Idx] and push to Stack.
   if (auto Res = TabInst.getRefAddr(Idx)) {
-    StackMgr.push(Res->get<UnknownRef>());
+    if (auto Res2 = StackMgr.push(Res->get<UnknownRef>()); unlikely(!Res2)) {
+      return Unexpect(Res2);
+    }
   } else {
     spdlog::error(ErrInfo::InfoInstruction(Instr.getOpCode(), Instr.getOffset(),
                                            {Idx},
@@ -118,7 +120,9 @@ Expect<void>
 Executor::runTableSizeOp(Runtime::StackManager &StackMgr,
                          Runtime::Instance::TableInstance &TabInst) {
   // Push SZ = size to stack.
-  StackMgr.push(TabInst.getSize());
+  if (auto Res = StackMgr.push(TabInst.getSize()); unlikely(!Res)) {
+    return Unexpect(Res);
+  }
   return {};
 }
 
