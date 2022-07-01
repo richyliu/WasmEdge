@@ -235,8 +235,14 @@ Expect<void> Loader::loadSegment(AST::CodeSegment &CodeSeg) {
 
   // Read the vector of local variable counts and types.
   uint32_t VecCnt = 0;
+  // TODO: change local variable array handling to prevent OOM errors
   if (auto Res = FMgr.readU32()) {
     VecCnt = *Res;
+    // TODO: temp fix
+    if (VecCnt > 1000) {
+      return logLoadError(ErrCode::TooManyLocals, FMgr.getLastOffset(),
+                          ASTNodeAttr::Seg_Code);
+    }
     CodeSeg.getLocals().clear();
     CodeSeg.getLocals().reserve(VecCnt);
   } else {
