@@ -57,10 +57,6 @@ Expect<std::unique_ptr<AST::Module>> Loader::loadModule() {
       uint32_t ContentSize = 0;
       if (auto Res = FMgr.readU32()) {
         ContentSize = *Res;
-        if (unlikely(FMgr.getRemainSize() < ContentSize)) {
-          return logLoadError(ErrCode::LengthOutOfBounds, FMgr.getOffset(),
-                              ASTNodeAttr::Sec_AOT);
-        }
       } else {
         break;
       }

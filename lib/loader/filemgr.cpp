@@ -72,6 +72,9 @@ Expect<Byte> FileMgr::readByte() {
 
 // Read number of bytes. See "include/loader/filemgr.h".
 Expect<std::vector<Byte>> FileMgr::readBytes(size_t SizeToRead) {
+  if (unlikely(getRemainSize() < SizeToRead)) {
+    return Unexpect(ErrCode::LengthOutOfBounds);
+  }
   // Set the flag to the start offset.
   LastPos = Pos;
   // Read bytes into vector.
