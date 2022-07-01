@@ -280,6 +280,11 @@ Expect<void> Loader::loadSegment(AST::CodeSegment &CodeSeg) {
                           ASTNodeAttr::Seg_Code);
     } else {
       LocalType = static_cast<ValType>(*Res);
+      if (LocalType == ValType::None) {
+        // cannot read a `None` type (not part of Webassembly spec)
+        return logLoadError(ErrCode::MalformedValType, FMgr.getLastOffset(),
+                            ASTNodeAttr::Seg_Code);
+      }
     }
     if (auto Res = checkValTypeProposals(LocalType, FMgr.getLastOffset(),
                                          ASTNodeAttr::Seg_Code);
