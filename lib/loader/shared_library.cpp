@@ -82,11 +82,24 @@ Expect<void> SharedLibrary::load(const std::filesystem::path &Path) noexcept {
 Expect<void> SharedLibrary::load(const AST::AOTSection &AOTSec) noexcept {
   BinarySize = 0;
   for (const auto &Section : AOTSec.getSections()) {
-    BinarySize =
-        std::max(BinarySize, std::get<1>(Section) + std::get<2>(Section));
+    uint64_t NewSize = 0;
+    if (__builtin_add_overflow(std::get<1>(Section), std::get<2>(Section),
+                               &NewSize)) {
+      spdlog::error(ErrCode::LengthOutOfBounds);
+      spdlog::error("    Offset: {} + Size: {} overflowed",
+                    std::get<1>(Section), std::get<2>(Section));
+      return Unexpect(ErrCode::LengthOutOfBounds);
+    }
+    BinarySize = std::max(BinarySize, NewSize);
   }
   BinarySize = roundUpPageBoundary(BinarySize);
 
+  // max binary size 256 mib
+  if (BinarySize > 0x10000000) {
+    spdlog::error(ErrCode::LengthOutOfBounds);
+    spdlog::error("    BinarySize: {} too big", BinarySize);
+    return Unexpect(ErrCode::LengthOutOfBounds);
+  }
   Binary = Allocator::allocate_chunk(BinarySize);
   if (unlikely(!Binary)) {
     spdlog::error(ErrCode::MemoryOutOfBounds);
@@ -98,6 +111,19 @@ Expect<void> SharedLibrary::load(const AST::AOTSection &AOTSec) noexcept {
     const auto Offset = std::get<1>(Section);
     const auto Size = std::get<2>(Section);
     const auto &Content = std::get<3>(Section);
+    uint64_t CopyMax = 0;
+    if (__builtin_add_overflow(Offset, Content.size(), &CopyMax)) {
+      spdlog::error(ErrCode::LengthOutOfBounds);
+      spdlog::error("    Offset: {} + Content.size(): {} overflowed",
+                    Offset, Content.size());
+      return Unexpect(ErrCode::LengthOutOfBounds);
+    }
+    if (CopyMax > BinarySize) {
+      spdlog::error(ErrCode::LengthOutOfBounds);
+      spdlog::error("    Offset + Content.size(): {} exceeds BinarySize: {}",
+                    CopyMax, BinarySize);
+      return Unexpect(ErrCode::LengthOutOfBounds);
+    }
     std::copy(Content.begin(), Content.end(), Binary + Offset);
     switch (std::get<0>(Section)) {
     case 1: { // Text
