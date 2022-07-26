@@ -1,0 +1,11 @@
+./oom-*
+./timeout-*
+./crash-*
+ignore/
+corpus/
+.gdb_history
+
+test
+run
+run_no_fuzzer
+preload.so
